@@ -3,10 +3,9 @@ import { Client, PrivateKey, AccountId, TokenId, TransferTransaction, TokenAssoc
 const faucetLimits = new Map();
 const IP_LIMITS = new Map();
 const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
-
-// ✅ Hardcoded Correct Token ID
-const TOKEN_ID = TokenId.fromString("0.0.8198347"); 
-const TOKEN_AMOUNT = 10; 
+const TOKEN_ID = TokenId.fromString("0.0.8198347");
+const TOKEN_AMOUNT = 10;
+const HEDERA_ACCOUNT_REGEX = /^0\.0\.\d+$/; // Regex to validate Hedera account format
 
 export default async function handler(req, res) {
     if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
@@ -14,25 +13,23 @@ export default async function handler(req, res) {
     const { walletAddress } = req.body;
     const userIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress; 
 
-    if (!walletAddress) return res.status(400).send("Missing wallet address");
+    console.log("Received wallet address:", walletAddress);
+
+    // ✅ Validate wallet address format before using it
+    if (!HEDERA_ACCOUNT_REGEX.test(walletAddress)) {
+        console.error("Invalid Hedera account format:", walletAddress);
+        return res.status(400).json({ success: false, error: "Invalid Hedera account format. Use 0.0.xxxxx" });
+    }
 
     try {
-        // ✅ Convert walletAddress to AccountId before using it
         const recipientAccount = AccountId.fromString(walletAddress);
 
         // Cooldown checks
-        if (faucetLimits.has(walletAddress)) {
-            const lastClaimTime = faucetLimits.get(walletAddress);
-            if (Date.now() - lastClaimTime < COOLDOWN_TIME) {
-                return res.status(429).json({ success: false, error: "You can only claim once every 24 hours." });
-            }
+        if (faucetLimits.has(walletAddress) && Date.now() - faucetLimits.get(walletAddress) < COOLDOWN_TIME) {
+            return res.status(429).json({ success: false, error: "You can only claim once every 24 hours." });
         }
-
-        if (IP_LIMITS.has(userIP)) {
-            const lastIPClaimTime = IP_LIMITS.get(userIP);
-            if (Date.now() - lastIPClaimTime < COOLDOWN_TIME) {
-                return res.status(429).json({ success: false, error: "This IP has already claimed in the last 24 hours." });
-            }
+        if (IP_LIMITS.has(userIP) && Date.now() - IP_LIMITS.get(userIP) < COOLDOWN_TIME) {
+            return res.status(429).json({ success: false, error: "This IP has already claimed in the last 24 hours." });
         }
 
         // Load Hedera credentials
@@ -69,8 +66,8 @@ export default async function handler(req, res) {
         // Step 2: Send HTS Tokens
         console.log(`Sending ${TOKEN_AMOUNT} tokens to ${walletAddress}...`);
         const transaction = await new TransferTransaction()
-            .addTokenTransfer(TOKEN_ID, operatorId, -TOKEN_AMOUNT) // Deduct from faucet
-            .addTokenTransfer(TOKEN_ID, recipientAccount, TOKEN_AMOUNT) // Send to user
+            .addTokenTransfer(TOKEN_ID, operatorId, -TOKEN_AMOUNT)
+            .addTokenTransfer(TOKEN_ID, recipientAccount, TOKEN_AMOUNT)
             .execute(client);
 
         const receipt = await transaction.getReceipt(client);
@@ -89,5 +86,6 @@ export default async function handler(req, res) {
         res.status(500).json({ success: false, error: error.message });
     }
 }
+
 
 
