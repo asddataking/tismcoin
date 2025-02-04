@@ -60,7 +60,15 @@ h1 {
     margin-right: auto;
 }
 
-/* Buttons */
+/* Button Stack - Fixes Overlapping Issues */
+.button-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px; /* Space between buttons */
+}
+
+/* General Button Styles */
 .button {
     display: inline-flex;
     align-items: center;
@@ -89,32 +97,47 @@ h1 {
     color: #ffffff;
 }
 
-/* Faucet Button (New Addition) */
+/* MemeJob Button Fix */
+.button-memejobfun {
+    background-color: #FFA500; /* Orange */
+    color: #ffffff;
+    font-weight: 700;
+    text-align: center;
+}
+
+.button-memejobfun:hover {
+    background-color: #FF8C00; /* Darker Orange */
+}
+
+/* Faucet Button Fix */
 .faucet-button {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px; /* Space between icon and text */
     width: 18.75rem;
     min-height: 3rem;
     padding: 0.75rem 1rem;
     font-size: 1.125rem;
     font-weight: 700;
     text-decoration: none;
-    white-space: normal;
+    white-space: nowrap;
     background-color: #6A0DAD; /* Deep Purple */
-    color: #ffffff;
+    color: white;
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
-    box-sizing: border-box;
-    margin-bottom: 1rem;
-    text-align: center;
-    line-height: 1.3;
     transition: all 0.3s ease-in-out;
 }
 
 .faucet-button:hover {
     background-color: #4A0082; /* Darker Purple */
+}
+
+/* Fix Faucet Button Icon */
+.faucet-button .icon {
+    width: 24px;
+    height: 24px;
 }
 
 /* Footer */
