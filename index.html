@@ -1,32 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="theme-auto" lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Project</title>
-    <link rel="stylesheet" href="css/style.css"> <!-- Ensure you have your CSS linked -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>$TISM Coin - The Most Autistic Memecoin</title>
+    <link rel="icon" type="image/x-icon" href="/images/tismlogo.jpg">
+
+    <meta name="description" content="Official Website for $TISM Coin - Celebrating Autism in Web3">
+    <meta name="keywords" content="$TISM Coin, autism, memecoin, crypto">
+    <meta rel="canonical" href="https://yourwebsite.com">
+    <meta name="author" content="Tism Coin Team">
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/brands.css">
 </head>
+
 <body>
-
     <div class="container">
-        <h1>Welcome to My Project</h1>
-        
-        <!-- Existing Buttons (Assumed to be Here) -->
-        <button class="btn">Existing Button 1</button>
-        <button class="btn">Existing Button 2</button>
+        <div class="column">
+            <img class="avatar avatar--rounded" src="images/tism-avatar.png" alt="$TISM Coin">
+            <h1>$TISM Coin</h1>
+            <p>The Most Autistic Memecoin on the Planet</p>
+            <div class="button-stack" role="navigation">
 
-        <!-- New Faucet Button -->
-        <button class="faucet-button" id="faucet-btn">Claim Free HBAR</button>
+                <!-- X (Twitter) -->
+                <a class="button button-x" href="https://x.com/autismonhbar" target="_blank" rel="noopener" role="button">
+                    <img class="icon" aria-hidden="true" src="images/icons/x.svg" alt="X Logo"> Follow on X (Twitter)
+                </a>
 
+                <!-- Telegram -->
+                <a class="button button-telegram" href="https://t.me/TismCoinChat" target="_blank" rel="noopener" role="button">
+                    <img class="icon" aria-hidden="true" src="images/icons/telegram.svg" alt="Telegram Logo"> Join Telegram
+                </a>
+
+                <!-- MemeJob.Fun (Updated Link) -->
+                <a class="button button-memejobfun" href="https://memejob.fun/token/0.0.8198347" target="_blank" rel="noopener" role="button">
+                    <img class="icon" aria-hidden="true" src="images/icons/memejobfun.svg" alt="MemeJob.Fun Logo"> Buy on MemeJob.Fun
+                </a>
+
+                <!-- Faucet Button -->
+                <button class="button faucet-button" id="faucet-btn">
+                    <img class="icon" aria-hidden="true" src="images/icons/faucet.svg" alt="Faucet Icon"> Claim Free HBAR
+                </button>
+
+            </div>
+        </div>
     </div>
 
     <script>
         document.getElementById("faucet-btn").addEventListener("click", async () => {
+            const walletAddress = prompt("Enter your Hedera Wallet Address:");
+
+            if (!walletAddress) {
+                alert("You must enter a valid wallet address!");
+                return;
+            }
+
             try {
                 const response = await fetch("/api/faucet", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ walletAddress: "YOUR_WALLET_ADDRESS" }) // Replace dynamically
+                    body: JSON.stringify({ walletAddress }),
                 });
 
                 const data = await response.json();
