@@ -4,8 +4,8 @@ const faucetLimits = new Map(); // Store claim timestamps (resets on restart)
 const IP_LIMITS = new Map(); // Store IP claim timestamps (also resets on restart)
 const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-// Token Details (Replace with Your Token ID)
-const TOKEN_ID = "0.0.8198347)"; // Replace with your actual HTS token ID
+// ✅ Hardcoded Token ID
+const TOKEN_ID = TokenId.fromString("0.0.8198347"); 
 const TOKEN_AMOUNT = 10; // Number of tokens to send per claim
 
 export default async function handler(req, res) {
@@ -38,13 +38,16 @@ export default async function handler(req, res) {
         const operatorKey = PrivateKey.fromString(process.env.HEDERA_PRIVATE_KEY);
         const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 
+        console.log(`Processing faucet request for ${walletAddress}`);
+        console.log(`Using Token ID: ${TOKEN_ID.toString()}`);
+
         // Step 1: Associate the wallet with the token if needed
         try {
-            console.log(`Associating wallet ${walletAddress} with token ${TOKEN_ID} if needed...`);
+            console.log(`Checking if wallet ${walletAddress} is associated with token ${TOKEN_ID}...`);
 
             const associateTx = await new TokenAssociateTransaction()
                 .setAccountId(walletAddress)
-                .setTokenIds([TokenId.fromString(TOKEN_ID)])
+                .setTokenIds([TOKEN_ID])
                 .freezeWith(client)
                 .sign(operatorKey);
 
@@ -52,17 +55,19 @@ export default async function handler(req, res) {
             const associateReceipt = await associateResponse.getReceipt(client);
 
             if (associateReceipt.status.toString() === "SUCCESS") {
-                console.log(`Successfully associated ${walletAddress} with token ${TOKEN_ID}`);
+                console.log(`Wallet ${walletAddress} successfully associated with token ${TOKEN_ID}`);
+            } else {
+                console.error(`Failed to associate wallet ${walletAddress} with token ${TOKEN_ID}`);
             }
         } catch (err) {
-            console.log("Association may have failed, but continuing to send tokens...");
+            console.log("Skipping association; wallet may already be associated.");
         }
 
         // Step 2: Send HTS Tokens
         console.log(`Sending ${TOKEN_AMOUNT} tokens to ${walletAddress}...`);
         const transaction = await new TransferTransaction()
-            .addTokenTransfer(TokenId.fromString(TOKEN_ID), operatorId, -TOKEN_AMOUNT) // Deduct from faucet
-            .addTokenTransfer(TokenId.fromString(TOKEN_ID), walletAddress, TOKEN_AMOUNT) // Send to user
+            .addTokenTransfer(TOKEN_ID, operatorId, -TOKEN_AMOUNT) // Deduct from faucet
+            .addTokenTransfer(TOKEN_ID, walletAddress, TOKEN_AMOUNT) // Send to user
             .execute(client);
 
         const receipt = await transaction.getReceipt(client);
@@ -72,10 +77,12 @@ export default async function handler(req, res) {
         faucetLimits.set(walletAddress, Date.now());
         IP_LIMITS.set(userIP, Date.now());
 
+        console.log(`Successfully sent ${TOKEN_AMOUNT} tokens to ${walletAddress} (TxID: ${txId})`);
+
         res.status(200).json({ success: true, txId });
 
     } catch (error) {
-        console.error(error);
+        console.error("Faucet Error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 }
