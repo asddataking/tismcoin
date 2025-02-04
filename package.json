@@ -1,0 +1,32 @@
+{
+  "name": "tism-coin-website",
+  "version": "1.0.0",
+  "description": "Tism coin website to celebrate autism",
+  "keywords": [
+    "tism",
+    "coin",
+    "faucet",
+    "tism",
+    "coin",
+    "hedera",
+    "crypto"
+  ],
+  "homepage": "https://github.com/asddataking/tismcoin#readme",
+  "bugs": {
+    "url": "https://github.com/asddataking/tismcoin/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asddataking/tismcoin.git"
+  },
+  "license": "ISC",
+  "author": "danrichmondyt",
+  "type": "commonjs",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.56.0"
+  }
+}
