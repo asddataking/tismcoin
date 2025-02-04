@@ -1,23 +1,26 @@
 import { Client, PrivateKey, AccountId, TokenId, TransferTransaction, TokenAssociateTransaction } from "@hashgraph/sdk";
 
-const faucetLimits = new Map(); // Store claim timestamps (resets on restart)
-const IP_LIMITS = new Map(); // Store IP claim timestamps (also resets on restart)
-const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const faucetLimits = new Map();
+const IP_LIMITS = new Map();
+const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
 
-// ✅ Hardcoded Token ID
+// ✅ Hardcoded Correct Token ID
 const TOKEN_ID = TokenId.fromString("0.0.8198347"); 
-const TOKEN_AMOUNT = 10; // Number of tokens to send per claim
+const TOKEN_AMOUNT = 10; 
 
 export default async function handler(req, res) {
     if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
 
     const { walletAddress } = req.body;
-    const userIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get user IP
+    const userIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress; 
 
     if (!walletAddress) return res.status(400).send("Missing wallet address");
 
     try {
-        // Check cooldown for wallet address
+        // ✅ Convert walletAddress to AccountId before using it
+        const recipientAccount = AccountId.fromString(walletAddress);
+
+        // Cooldown checks
         if (faucetLimits.has(walletAddress)) {
             const lastClaimTime = faucetLimits.get(walletAddress);
             if (Date.now() - lastClaimTime < COOLDOWN_TIME) {
@@ -25,7 +28,6 @@ export default async function handler(req, res) {
             }
         }
 
-        // Check cooldown for IP address
         if (IP_LIMITS.has(userIP)) {
             const lastIPClaimTime = IP_LIMITS.get(userIP);
             if (Date.now() - lastIPClaimTime < COOLDOWN_TIME) {
@@ -33,12 +35,13 @@ export default async function handler(req, res) {
             }
         }
 
-        // Load Hedera credentials from environment variables
+        // Load Hedera credentials
         const operatorId = AccountId.fromString(process.env.HEDERA_ACCOUNT_ID);
         const operatorKey = PrivateKey.fromString(process.env.HEDERA_PRIVATE_KEY);
         const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 
         console.log(`Processing faucet request for ${walletAddress}`);
+        console.log(`Parsed recipient account: ${recipientAccount.toString()}`);
         console.log(`Using Token ID: ${TOKEN_ID.toString()}`);
 
         // Step 1: Associate the wallet with the token if needed
@@ -46,7 +49,7 @@ export default async function handler(req, res) {
             console.log(`Checking if wallet ${walletAddress} is associated with token ${TOKEN_ID}...`);
 
             const associateTx = await new TokenAssociateTransaction()
-                .setAccountId(walletAddress)
+                .setAccountId(recipientAccount)
                 .setTokenIds([TOKEN_ID])
                 .freezeWith(client)
                 .sign(operatorKey);
@@ -67,7 +70,7 @@ export default async function handler(req, res) {
         console.log(`Sending ${TOKEN_AMOUNT} tokens to ${walletAddress}...`);
         const transaction = await new TransferTransaction()
             .addTokenTransfer(TOKEN_ID, operatorId, -TOKEN_AMOUNT) // Deduct from faucet
-            .addTokenTransfer(TOKEN_ID, walletAddress, TOKEN_AMOUNT) // Send to user
+            .addTokenTransfer(TOKEN_ID, recipientAccount, TOKEN_AMOUNT) // Send to user
             .execute(client);
 
         const receipt = await transaction.getReceipt(client);
@@ -86,4 +89,5 @@ export default async function handler(req, res) {
         res.status(500).json({ success: false, error: error.message });
     }
 }
+
 
