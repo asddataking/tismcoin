@@ -1,10 +1,12 @@
-import { Client, PrivateKey, AccountId, TransferTransaction, Hbar } from "@hashgraph/sdk";
-import crypto from "crypto";
+import { Client, PrivateKey, AccountId, TokenId, TransferTransaction, TokenAssociateTransaction } from "@hashgraph/sdk";
 
 const faucetLimits = new Map(); // Store claim timestamps (resets on restart)
 const IP_LIMITS = new Map(); // Store IP claim timestamps (also resets on restart)
-const CLAIM_AMOUNT = new Hbar(0.1); // Amount of HBAR given per claim
 const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+// Token Details (Replace with Your Token ID)
+const TOKEN_ID = "0.0.8198347)"; // Replace with your actual HTS token ID
+const TOKEN_AMOUNT = 10; // Number of tokens to send per claim
 
 export default async function handler(req, res) {
     if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
@@ -23,11 +25,11 @@ export default async function handler(req, res) {
             }
         }
 
-        // Check cooldown for IP address (prevents multiple wallets from same IP)
+        // Check cooldown for IP address
         if (IP_LIMITS.has(userIP)) {
             const lastIPClaimTime = IP_LIMITS.get(userIP);
             if (Date.now() - lastIPClaimTime < COOLDOWN_TIME) {
-                return res.status(429).json({ success: false, error: "This IP has already claimed HBAR in the last 24 hours." });
+                return res.status(429).json({ success: false, error: "This IP has already claimed in the last 24 hours." });
             }
         }
 
@@ -36,10 +38,31 @@ export default async function handler(req, res) {
         const operatorKey = PrivateKey.fromString(process.env.HEDERA_PRIVATE_KEY);
         const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 
-        // Send HBAR transaction
+        // Step 1: Associate the wallet with the token if needed
+        try {
+            console.log(`Associating wallet ${walletAddress} with token ${TOKEN_ID} if needed...`);
+
+            const associateTx = await new TokenAssociateTransaction()
+                .setAccountId(walletAddress)
+                .setTokenIds([TokenId.fromString(TOKEN_ID)])
+                .freezeWith(client)
+                .sign(operatorKey);
+
+            const associateResponse = await associateTx.execute(client);
+            const associateReceipt = await associateResponse.getReceipt(client);
+
+            if (associateReceipt.status.toString() === "SUCCESS") {
+                console.log(`Successfully associated ${walletAddress} with token ${TOKEN_ID}`);
+            }
+        } catch (err) {
+            console.log("Association may have failed, but continuing to send tokens...");
+        }
+
+        // Step 2: Send HTS Tokens
+        console.log(`Sending ${TOKEN_AMOUNT} tokens to ${walletAddress}...`);
         const transaction = await new TransferTransaction()
-            .addHbarTransfer(operatorId, CLAIM_AMOUNT.negated()) // Deduct from the faucet
-            .addHbarTransfer(walletAddress, CLAIM_AMOUNT) // Send to user
+            .addTokenTransfer(TokenId.fromString(TOKEN_ID), operatorId, -TOKEN_AMOUNT) // Deduct from faucet
+            .addTokenTransfer(TokenId.fromString(TOKEN_ID), walletAddress, TOKEN_AMOUNT) // Send to user
             .execute(client);
 
         const receipt = await transaction.getReceipt(client);
@@ -56,3 +79,4 @@ export default async function handler(req, res) {
         res.status(500).json({ success: false, error: error.message });
     }
 }
+
