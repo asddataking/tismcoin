@@ -1,51 +1,45 @@
 <!DOCTYPE html>
-<html class="theme-auto" lang="en">
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>$Tism Coin - The Most Autistic Memecoin</title>
-    <link rel="icon" type="image/x-icon" href="/images/tismlogo.jpg">
-
-    <meta name="description" content="Official Website for $Tism Coin - Celebrating Autism in Web3">
-    <meta name="keywords" content="$Tism Coin, autism, memecoin, crypto">
-    <meta rel="canonical" href="https://tismonhbar.com>
-    <meta name="author" content="Tism Coin Team">
-
-    <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/brands.css">
-    <script>
-      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Project</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Ensure you have your CSS linked -->
 </head>
-
 <body>
+
     <div class="container">
-        <div class="column">
-            <img class="avatar avatar--rounded" src="images/tismlogo.jpg" alt="$Tism Coin">
-            <h1>$Tism Coin</h1>
-            <p>The Most Autistic Memecoin on the Planet</p>
-            <div class="button-stack" role="navigation">
+        <h1>Welcome to My Project</h1>
+        
+        <!-- Existing Buttons (Assumed to be Here) -->
+        <button class="btn">Existing Button 1</button>
+        <button class="btn">Existing Button 2</button>
 
-                <!-- Twitter -->
-                <a class="button button-x" href="https://x.com/autismonhbar" target="_blank" rel="noopener" role="button">
-                    <img class="icon" aria-hidden="true" src="images/icons/x.svg" alt="Twitter Logo"> Follow on Twitter
-                </a>
-
-                <!-- Telegram -->
-                <a class="button button-telegram" href="https://t.co/FNwYS6qiha" target="_blank" rel="noopener" role="button">
-                    <img class="icon" aria-hidden="true" src="images/icons/telegram.svg" alt="Telegram Logo"> Join Telegram
-                </a>
-
-                <!-- MemeJob.Fun -->
-                <a class="button button-memejobfun" href="https://memejob.fun/token/0.0.8198347" target="_blank" rel="noopener" role="button">
-                    <img class="icon" aria-hidden="true" src="images/memejob.jpeg alt="MemeJob.Fun Logo"> Buy on MemeJob.Fun
-                </a>
-            </div>
-        </div>
+        <!-- New Faucet Button -->
+        <button id="faucet-btn" class="btn faucet-btn">Claim Free HBAR</button>
     </div>
+
+    <script>
+        document.getElementById("faucet-btn").addEventListener("click", async () => {
+            try {
+                const response = await fetch("/api/faucet", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ walletAddress: "YOUR_WALLET_ADDRESS" }) // Replace dynamically
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Success! Transaction ID: ${data.txId}`);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Failed to claim HBAR. Try again later.");
+            }
+        });
+    </script>
+
 </body>
 </html>
